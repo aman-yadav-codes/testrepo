@@ -5,15 +5,26 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  Settings,
-  FileText,
   BarChart3,
+  FileText,
   Bell,
+  Settings,
   ChevronsUpDown,
   LogOut,
   BadgeCheck,
   CreditCard,
   Sparkles,
+  ChevronRight,
+  UserCircle,
+  UserCog,
+  TrendingUp,
+  PieChart,
+  Newspaper,
+  Image,
+  BellRing,
+  BellOff,
+  Lock,
+  Palette,
 } from "lucide-react";
 
 import {
@@ -26,6 +37,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -36,8 +50,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// Nav items — items with `children` get a collapsible dropdown
 const navItems = [
   {
     title: "Dashboard",
@@ -48,34 +68,48 @@ const navItems = [
     title: "Users",
     url: "/admin/users",
     icon: Users,
+    children: [
+      { title: "All Users", url: "/admin/users", icon: UserCircle },
+      { title: "Roles & Permissions", url: "/admin/users/roles", icon: UserCog },
+    ],
   },
   {
     title: "Analytics",
     url: "/admin/analytics",
     icon: BarChart3,
+    children: [
+      { title: "Overview", url: "/admin/analytics", icon: TrendingUp },
+      { title: "Reports", url: "/admin/analytics/reports", icon: PieChart },
+    ],
   },
   {
     title: "Content",
     url: "/admin/content",
     icon: FileText,
+    children: [
+      { title: "Posts", url: "/admin/content", icon: Newspaper },
+      { title: "Media", url: "/admin/content/media", icon: Image },
+    ],
   },
   {
     title: "Notifications",
     url: "/admin/notifications",
     icon: Bell,
+    children: [
+      { title: "All", url: "/admin/notifications", icon: BellRing },
+      { title: "Muted", url: "/admin/notifications/muted", icon: BellOff },
+    ],
   },
   {
     title: "Settings",
     url: "/admin/settings",
     icon: Settings,
+    children: [
+      { title: "General", url: "/admin/settings", icon: Palette },
+      { title: "Security", url: "/admin/settings/security", icon: Lock },
+    ],
   },
 ];
-
-const user = {
-  name: "shadcn",
-  email: "m@example.com",
-  avatar: "",
-};
 
 const teams = [
   { name: "Acme Inc", plan: "Enterprise" },
@@ -83,12 +117,14 @@ const teams = [
   { name: "Evil Corp.", plan: "Free" },
 ];
 
+const user = { name: "shadcn", email: "m@example.com", avatar: "" };
+
 export function AppSidebar() {
   const pathname = usePathname();
 
   return (
     <Sidebar collapsible="icon">
-      {/* Header — Team / Workspace switcher */}
+      {/* Header — Team switcher */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -114,10 +150,8 @@ export function AppSidebar() {
                 side="bottom"
                 sideOffset={4}
               >
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  Teams
-                </DropdownMenuLabel>
-                {teams.map((team, index) => (
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Teams</DropdownMenuLabel>
+                {teams.map((team) => (
                   <DropdownMenuItem key={team.name} className="gap-2 p-2">
                     <div className="flex size-6 items-center justify-center rounded-sm border text-xs font-bold">
                       {team.name[0]}
@@ -134,30 +168,71 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      {/* Content — Navigation links */}
+      {/* Content — Nav with collapsible dropdowns */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Platform</SidebarGroupLabel>
           <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
+            {navItems.map((item) =>
+              item.children ? (
+                // Collapsible item with sub-menu
+                <Collapsible
+                  key={item.title}
                   asChild
-                  isActive={pathname === item.url}
-                  tooltip={item.title}
+                  defaultOpen={pathname.startsWith(item.url)}
+                  className="group/collapsible"
                 >
-                  <Link href={item.url}>
-                    <item.icon className="size-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        isActive={pathname.startsWith(item.url)}
+                      >
+                        <item.icon className="size-4" />
+                        <span>{item.title}</span>
+                        <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.children.map((child) => (
+                          <SidebarMenuSubItem key={child.title}>
+                            <SidebarMenuSubButton
+                              asChild
+                              isActive={pathname === child.url}
+                            >
+                              <Link href={child.url}>
+                                <child.icon className="size-3.5" />
+                                <span>{child.title}</span>
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              ) : (
+                // Plain link item (Dashboard)
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="size-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            )}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer — User profile with dropdown */}
+      {/* Footer — User profile dropdown */}
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -175,9 +250,7 @@ export function AppSidebar() {
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">{user.name}</span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {user.email}
-                    </span>
+                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4" />
                 </SidebarMenuButton>
@@ -198,9 +271,7 @@ export function AppSidebar() {
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">{user.name}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </span>
+                      <span className="truncate text-xs text-muted-foreground">{user.email}</span>
                     </div>
                   </div>
                 </DropdownMenuLabel>
